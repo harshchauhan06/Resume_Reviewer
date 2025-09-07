@@ -101,7 +101,7 @@ async function generateFeedback() {
         };
         console.log("Sending request to backend:", bodyData);
 
-        const response = await fetch("https: //resume-reviewer-backend.onrender.com/feedback", {
+        const response = await fetch("https://resume-reviewer-x8lk.onrender.com/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
