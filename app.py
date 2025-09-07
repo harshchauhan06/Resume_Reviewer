@@ -19,6 +19,9 @@ else:
 def feedback():
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON payload provided"}), 400
+
         job_role = data.get("job_role", "").strip()
         resume_text = data.get("resume_text", "").strip()
         job_desc = data.get("job_desc", "").strip()
@@ -26,7 +29,7 @@ def feedback():
         if not resume_text or not job_role:
             return jsonify({"error": "Resume text and job role are required"}), 400
 
-        # Clean up text: remove multiple spaces/newlines and truncate
+        # Clean text and truncate to safe length
         resume_text_clean = re.sub(r"\s+", " ", resume_text)[:4000]
         job_desc_clean = re.sub(r"\s+", " ", job_desc)[:1000]
 
@@ -52,7 +55,7 @@ Analyze for:
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "groq/compound",  # ✅ correct model for your account
+            "model": "groq/compound",
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 800,
             "temperature": 0.7
@@ -66,16 +69,18 @@ Analyze for:
 
         if response.status_code != 200:
             return jsonify({
-                "error": f"Groq error {response.status_code}",
+                "error": f"Groq API error {response.status_code}",
                 "details": response.text
             }), 500
 
         result = response.json()
+        feedback_text = ""
         if "choices" in result and result["choices"]:
             feedback_text = result["choices"][0]["message"]["content"]
-            return jsonify({"feedback": feedback_text})
         else:
             return jsonify({"error": "No choices returned from Groq", "details": result}), 500
+
+        return jsonify({"feedback": feedback_text})
 
     except Exception as e:
         print("Exception occurred:", str(e))
@@ -87,4 +92,5 @@ def ping():
     return "pong"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render assigns PORT dynamically
+    app.run(host="0.0.0.0", port=port, debug=True)
