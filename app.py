@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import os
 import traceback
 import re
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="docs")
 CORS(app)
 
 # Load Groq API key
@@ -15,6 +15,20 @@ if not GROQ_API_KEY:
 else:
     print("Loaded Groq API key:", GROQ_API_KEY[:8] + "****")
 
+# ----------------------------
+# Frontend routes
+# ----------------------------
+@app.route("/")
+def index():
+    return send_from_directory("docs", "index.html")
+
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory("docs", path)
+
+# ----------------------------
+# Backend API
+# ----------------------------
 @app.route("/feedback", methods=["POST"])
 def feedback():
     try:
@@ -48,14 +62,15 @@ Analyze for:
 - Provide section-wise feedback (Education, Experience, Skills, etc.)
 """
 
-        # Groq API request
+        # ✅ Correct Groq API request
         url = "https://api.groq.com/openai/v1/chat/completions"
+
         headers = {
             "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "groq/compound",
+            "model": "llama-3.1-8b-instant",  # ✅ valid Groq model
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 800,
             "temperature": 0.7
@@ -92,5 +107,5 @@ def ping():
     return "pong"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render assigns PORT dynamically
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

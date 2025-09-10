@@ -128,6 +128,3 @@ async function generateFeedback() {
         document.getElementById("generateBtn").disabled = false;
     }
 }
-resumeText = document.getElementById("resumeText").value.trim() || resumeText;
-const jobRole = document.getElementById("jobRole").value.trim();
-const jobDescription = document.getElementById("jobDescription").value.trim();
